@@ -6,7 +6,6 @@ def printTime():
     current_time = now.strftime("%H:%M:%S")
     return str(current_time)
 
-
 def clearTXT(text):
     with open('docs/output/'+text,'w') as file:
         pass
@@ -27,6 +26,15 @@ def sortedTXT(file_input,file_output):
         for line in sorted(r):
             with open('docs/output/'+file_output,'a+') as f:
                 f.write(line)
+
+def captureMatricula(file_input, file_output):
+    #+prof.split(' (')[1].replace(')','')
+    clearTXT('test.txt')
+    with open('docs/output/'+file_input, 'r') as r:
+        for line in r:
+            with open('docs/output/'+file_output,'a+') as f:
+                mat = line[3:].split(' (')[1].replace(')','')
+                f.write( '31|'+mat[:-1]+'|'+str(line[3:]).split(' (')[0]+'\n' )
 
 print('### SYNC_SUAP_CENSUP ###')
 print( printTime()+' | Iniciando processamento.')
@@ -50,7 +58,7 @@ for index, row in df.iterrows():
             if not searchTXT( prof ):
                 escreveTXT( '31|'+prof )
 
-
 clearTXT('test_ordering.txt')
 sortedTXT('test.txt','test_ordering.txt')
+captureMatricula('test_ordering.txt','test.txt')
 print( printTime()+' | Finalizou processamento.')
