@@ -57,6 +57,18 @@ def captureMatricula(file_input, file_output):
     clearTXT(DOC_AUX_TXT)
     duplicateLineQTDTXT(DOC_TXT,DOC_AUX_TXT)
 
+def linhasVinculosDiarios(file_input, file_output):
+    copyFile(file_input,file_output)
+    clearTXT(file_input)
+
+    with open('docs/output/'+file_output, 'r') as r:
+        for line in r:
+            with open('docs/output/'+file_input,'a+') as f:
+                f.write( line.split('==')[0]+'\n' )
+                for x in range(int(line.split('==')[1])):
+                    f.write( '32|COD_CURSO'+'\n' )
+    clearTXT(DOC_AUX_TXT)
+
 print('### SYNC_SUAP_CENSUP ###')
 
 df = pd.read_excel('docs/input/docente_vinculos.xls')
@@ -83,4 +95,6 @@ for index, row in df.iterrows():
 clearTXT(DOC_AUX_TXT)
 sortedTXT(DOC_TXT,DOC_AUX_TXT)
 captureMatricula(DOC_AUX_TXT,DOC_TXT)
+linhasVinculosDiarios(DOC_TXT,DOC_AUX_TXT)
+
 print('Finalizou processamento.')
