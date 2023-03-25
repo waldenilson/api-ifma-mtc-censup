@@ -1,4 +1,5 @@
 import pandas as pd
+import collections
 
 DOC_TXT = 'test.txt'
 DOC_CSV = 'test.csv'
@@ -25,11 +26,28 @@ def sortedTXT(file_input,file_output):
             with open('docs/output/'+file_output,'a+') as f:
                 f.write(line)
 
+def copyFile(file_input, file_output):
+    with open('docs/output/'+file_input, 'r') as r:
+        for line in r:
+            with open('docs/output/'+file_output,'a+') as f:
+                f.write( line )
+    
+def duplicateLineQTDTXT(file_input, file_output):
+    copyFile(file_input,file_output)
+    clearTXT(file_input)
+
+    with open('docs/output/'+file_output, 'r') as f:
+        counts = collections.Counter(l.strip() for l in f)
+        for line, count in counts.most_common():
+            with open('docs/output/'+file_input,'a+') as f:
+                f.write( line+'=='+str(count)+'\n' )
+    clearTXT(DOC_AUX_TXT)
+
 def captureMatricula(file_input, file_output):
     clearTXT(file_output)
 
-    with open('docs/output/'+file_output,'a+') as f:
-        f.write( '30|600'+'\n' )
+    #with open('docs/output/'+file_output,'a+') as f:
+    #    f.write( '30|600'+'\n' )
 
     with open('docs/output/'+file_input, 'r') as r:
         for line in r:
@@ -37,6 +55,7 @@ def captureMatricula(file_input, file_output):
                 mat = line[3:].split(' (')[1].replace(')','')
                 f.write( '31|'+mat[:-1]+'|'+str(line[3:]).split(' (')[0]+'\n' )
     clearTXT(DOC_AUX_TXT)
+    duplicateLineQTDTXT(DOC_TXT,DOC_AUX_TXT)
 
 print('### SYNC_SUAP_CENSUP ###')
 
@@ -53,13 +72,13 @@ for index, row in df.iterrows():
             aux = prof.split(',')
             for s in aux:
                 if s[0] == ' ':
-                    if not searchTXT( s[1:],DOC_TXT ):
-                        escreveTXT( '31|'+s[1:],DOC_TXT )
-                elif not searchTXT( s,DOC_TXT ):
-                        escreveTXT( '31|'+s,DOC_TXT )
+                    #if not searchTXT( s[1:],DOC_TXT ):
+                    escreveTXT( '31|'+s[1:],DOC_TXT )
+                else:#if not searchTXT( s,DOC_TXT ):
+                    escreveTXT( '31|'+s,DOC_TXT )
         else:
-            if not searchTXT( prof,DOC_TXT ):
-                escreveTXT( '31|'+prof,DOC_TXT )
+            #if not searchTXT( prof,DOC_TXT ):
+            escreveTXT( '31|'+prof,DOC_TXT )
 
 clearTXT(DOC_AUX_TXT)
 sortedTXT(DOC_TXT,DOC_AUX_TXT)
