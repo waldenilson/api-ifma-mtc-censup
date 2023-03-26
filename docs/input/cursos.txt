@@ -1,0 +1,10 @@
+Sistemas de Informação|113813
+Bacharelado em Engenharia Civil|113918
+Licenciatura em Física|62676
+Licenciatura em Química|62682
+Licenciatura em Matemática|21443
+Bacharelado em Engenharia Elétrica Industrial|18367
+Bacharelado em Engenharia Mecânica Industrial|18368
+Licenciatura em Química EAD|117318
+Tecnólogo em Processos Químicos|1516922
+Licenciatura em Biologia|62674

@@ -40,7 +40,7 @@ def duplicateLineQTDTXT(file_input, file_output):
         counts = collections.Counter(l.strip() for l in f)
         for line, count in counts.most_common():
             with open('docs/output/'+file_input,'a+') as f:
-                f.write( line+'=='+str(count)+'\n' )
+                f.write( line+'|'+str(count)+'\n' )
     clearTXT(DOC_AUX_TXT)
 
 def captureMatricula(file_input, file_output):
@@ -52,7 +52,8 @@ def captureMatricula(file_input, file_output):
     with open('docs/output/'+file_input, 'r') as r:
         for line in r:
             with open('docs/output/'+file_output,'a+') as f:
-                mat = line[3:].split(' (')[1].replace(')','')
+                profs = line.split('|')[1]
+                mat = profs.split(' (')[1].replace(')','')
                 f.write( '31|'+mat[:-1]+'|'+str(line[3:]).split(' (')[0]+'\n' )
     clearTXT(DOC_AUX_TXT)
     duplicateLineQTDTXT(DOC_TXT,DOC_AUX_TXT)
@@ -60,25 +61,26 @@ def captureMatricula(file_input, file_output):
 def linhasVinculosDiarios(file_input, file_output):
     copyFile(file_input,file_output)
     clearTXT(file_input)
-
+#31|matricula|nome_docente|13
     with open('docs/output/'+file_output, 'r') as r:
         for line in r:
             with open('docs/output/'+file_input,'a+') as f:
-                f.write( line.split('==')[0]+'\n' )
-                for x in range(int(line.split('==')[1])):
+                f.write( line.split('|')[0]+'|'+line.split('|')[1]+'|'+line.split('|')[2]+'\n' )
+                for x in range(int(line.split('|')[3])):
                     f.write( '32|COD_CURSO'+'\n' )
     clearTXT(DOC_AUX_TXT)
 
 print('### SYNC_SUAP_CENSUP ###')
 
 df = pd.read_excel('docs/input/docente_vinculos.xls')
-df[['Professores','Diretoria']].to_csv('docs/output/'+DOC_CSV,index=False,header=False)
+df[['Professores','Diretoria','Período Letivo']].to_csv('docs/output/'+DOC_CSV,index=False,header=False)
 clearTXT(DOC_TXT)
 
 df = df.reset_index()
 for index, row in df.iterrows():
     prof = str(row['Professores']).upper()
     diretoria = str( row['Diretoria'] )
+    curso_nome = str( row['Período Letivo'] )
     if prof != 'NAN' and diretoria == 'SUP':
         if prof.__contains__(','):
             aux = prof.split(',')
