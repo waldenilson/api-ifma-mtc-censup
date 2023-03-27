@@ -31,11 +31,12 @@ def sortedTXT(file_input,file_output):
                 f.write(line)
 
 def copyFile(file_input, file_output):
+    clearTXT(file_output)
     with open('docs/output/'+file_input, 'r') as r:
         for line in r:
             with open('docs/output/'+file_output,'a+') as f:
                 f.write( line )
-    
+
 def duplicateLineQTDTXT(file_input, file_output):
     copyFile(file_input,file_output)
     clearTXT(file_input)
@@ -45,7 +46,7 @@ def duplicateLineQTDTXT(file_input, file_output):
         for line, count in counts.most_common():
             with open('docs/output/'+file_input,'a+') as f:
                 f.write( line+'\n' )
-    clearTXT(DOC_AUX_TXT)
+    #clearTXT(DOC_AUX_TXT)
 
 def captureMatricula(file_input, file_output):
     clearTXT(file_output)
@@ -59,21 +60,44 @@ def captureMatricula(file_input, file_output):
                 profs = line.split('|')[1]
                 cod_curso = line.split('|')[2]
                 mat = profs.split(' (')[1].replace(')','')
-                f.write( '31|'+mat[:-1]+'|'+str(line[3:]).split(' (')[0]+'|'+cod_curso )
-    clearTXT(DOC_AUX_TXT)
-    duplicateLineQTDTXT(DOC_TXT,DOC_AUX_TXT)
+                f.write( '31|'+mat[:-1]+'|'+str(line[3:]).split(' (')[0]+'|'+cod_curso+'|\n' )
 
-def linhasVinculosDiarios(file_input, file_output):
-    copyFile(file_input,file_output)
-    clearTXT(file_input)
-#31|matricula|nome_docente|cod_curso
+    clearTXT(DOC_AUX_TXT)
+
     with open('docs/output/'+file_output, 'r') as r:
         for line in r:
             with open('docs/output/'+file_input,'a+') as f:
-                f.write( line.split('|')[0]+'|'+line.split('|')[1]+'|'+line.split('|')[2]+'\n' )
-                #for x in range(int(line.split('|')[3])):
-                    #f.write( '32|COD_CURSO'+'\n' )
-    clearTXT(DOC_AUX_TXT)
+                f.write( line.split('|')[0]+'|'+line.split('|')[1]+'|'+line.split('|')[2]+'|\n' )
+
+
+
+    #copyFile( DOC_TXT, DOC_AUX_TXT )
+    duplicateLineQTDTXT(DOC_TXT,DOC_DOCENTE_CURSO_TXT)
+    duplicateLineQTDTXT(DOC_AUX_TXT,DOC_DOCENTE_CURSO_TXT)
+
+def linhasVinculosDiarios(file_input, file_output):
+    clearTXT(DOC_DOCENTE_CURSO_TXT)
+
+    f1 = open('docs/output/'+file_output, 'r')
+    l1 = f1.readlines()
+
+    f2 = open('docs/output/'+file_input, 'r')
+    l2 = f2.readlines()
+    
+    for line1 in l1:
+        lista = []
+        for line2 in l2:
+            if int(line1.split('|')[1]) == int(line2.split('|')[1]):
+                lista.append( line2.split('|')[3] )
+        escreveTXT(line1.split('|')[0]+'|'+line1.split('|')[1]+'|'+line1.split('|')[2], DOC_DOCENTE_CURSO_TXT)
+        for l in lista:
+            escreveTXT( '32|'+str(l), DOC_DOCENTE_CURSO_TXT)
+    f1.close()
+    f2.close()
+
+    #clearTXT(DOC_TXT)
+    #copyFile(DOC_DOCENTE_CURSO_TXT, DOC_TXT)
+    #clearTXT(DOC_DOCENTE_CURSO_TXT)
 
 print('### SYNC_SUAP_CENSUP ###')
 
@@ -93,18 +117,18 @@ for index, row in df.iterrows():
                 if s[0] == ' ':
                     #if not searchTXT( s[1:],DOC_TXT ):
                     cod_curso = searchTXT( curso_nome, DOC_CURSOS_TXT ).split('|')[1]
-                    escreveTXT( '31|'+s[1:]+'|'+cod_curso,DOC_TXT )
+                    escreveTXT( '31|'+s[1:]+'|'+cod_curso+'|',DOC_TXT )
                 else:#if not searchTXT( s,DOC_TXT ):
                     cod_curso = searchTXT( curso_nome, DOC_CURSOS_TXT ).split('|')[1]
-                    escreveTXT( '31|'+s+'|'+cod_curso,DOC_TXT )
+                    escreveTXT( '31|'+s+'|'+cod_curso+'|',DOC_TXT )
         else:
             #if not searchTXT( prof,DOC_TXT ):
             cod_curso = searchTXT( curso_nome, DOC_CURSOS_TXT ).split('|')[1]
-            escreveTXT( '31|'+prof+'|'+cod_curso,DOC_TXT )
+            escreveTXT( '31|'+prof+'|'+cod_curso+'|',DOC_TXT )
 
 clearTXT(DOC_AUX_TXT)
 sortedTXT(DOC_TXT,DOC_AUX_TXT)
 captureMatricula(DOC_AUX_TXT,DOC_TXT)
-#linhasVinculosDiarios(DOC_TXT,DOC_AUX_TXT)
+linhasVinculosDiarios(DOC_TXT,DOC_AUX_TXT)
 
 print('Finalizou processamento.')
