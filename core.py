@@ -1,5 +1,7 @@
 import pandas as pd
 import collections
+import datetime
+import functions as func
 
 DOC_TXT = 'layout_censup_auto.txt'
 DOC_DOCENTE_VINCULO_CSV = 'test.csv'
@@ -7,6 +9,9 @@ DOC_DOCENTE_DADOS_CSV = 'test1.csv'
 DOC_CURSOS_TXT = 'cursos.txt'
 DOC_AUX_TXT = 'temp/auxiliar.txt'
 DOC_DOCENTE_CURSO_TXT = 'temp/docentes_cursos.txt'
+
+df_dados_pessoais = ''
+df_dados_vinculos = ''
 
 def clearTXT(doc):
     with open('docs/output/'+doc,'w') as file:
@@ -17,10 +22,10 @@ def escreveTXT(texto,doc):
         f.write(texto+'\n')
         
 def searchTXT(text, doc):
-    with open('docs/output/'+doc, 'r') as f:
+    with open('docs/output/'+doc, 'r', encoding='utf8') as f:
         encontrou = ''
         for line in f:
-            if text in str(line):
+            if str(text) in str(line):
                 encontrou = str(line)
                 break
         return encontrou
@@ -47,8 +52,7 @@ def duplicateLineQTDTXT(file_input, file_output):
         for line, count in counts.most_common():
             with open('docs/output/'+file_input,'a+') as f:
                 f.write( line+'\n' )
-    #clearTXT(DOC_AUX_TXT)
-
+    
 def captureMatricula(file_input, file_output):
     clearTXT(file_output)
 
@@ -58,7 +62,11 @@ def captureMatricula(file_input, file_output):
                 profs = line.split('|')[1]
                 cod_curso = line.split('|')[2]
                 mat = profs.split(' (')[1].replace(')','')
-                f.write( '31|'+mat+'|'+str(line[3:]).split(' (')[0]+'|'+cod_curso+'|\n' )
+    
+                if func.docenteExterno(matricula=mat) :
+                    pass #print( 'matricula==cpf '+profs )
+                else:
+                    f.write( '31|'+mat+'|'+str(line[3:]).split(' (')[0]+'|'+cod_curso+'|\n' )
 
     clearTXT(DOC_AUX_TXT)
 
@@ -107,32 +115,115 @@ def linhasVinculosCursos(file_input, file_output):
 def itensLayout():
     clearTXT(DOC_AUX_TXT)
     copyFile(DOC_TXT, DOC_AUX_TXT)
+    clearTXT(DOC_TXT)
     f = open('docs/output/'+DOC_AUX_TXT,'r')
     ls = f.readlines()
+    
     for l in ls:
-        print(str(l)[:-1])
-        #if str(l)[0:3] == '32|':
-        #    print( 'tudo:*'+str(l)[:-1]+'*' )
-        #if compare in str(l) and ts in str(l):
-            #l.split('|')[split]
-            #escreveTXT(  str(l).replace('__'+str(split)+'__',text) ,DOC_TXT )
-            #escreveTXT( str(l).replace(ts,text), DOC_TXT )
-            #print( str(l).replace(ts,text)[:-1] )
-            #pass
-        #elif str(l)[0:3] == '32|' or str(l)[0:3] == '30|':#str('32|') in str(l) or str('30|') in str(l):
-            #escreveTXT( str(l) ,DOC_TXT )
-            #print( str(l)[:-1] )
-            #pass
+        if str(l)[0:3] == '31|':
+            encontrou_docente_dados_pessoais = ''
+            mat = str(l).split('|')[1]
+            df_dados_pessoais = pd.read_excel('docs/input/docente_dados_pessoais_tudo.xls')
+            df_dados_pessoais[['MATRICULA','SERVIDOR','CPF','NASCIMENTO DATA','DEFICIENCIA','RACA','NASCIMENTO MUNICIPIO','TITULACAO','SITUACAO','JORNADA TRABALHO','FUNCAO DISPLAY']].to_csv('docs/output/temp/'+DOC_DOCENTE_DADOS_CSV,index=False,header=False)
+            df_dados_pessoais = df_dados_pessoais.reset_index()
+            #cpf = ''
+            for index, row in df_dados_pessoais.iterrows():
+                prof = str(row['MATRICULA'])
+                if prof == mat:
+                    encontrou_docente_dados_pessoais = prof
+                    break
+            if encontrou_docente_dados_pessoais == '':
+                print( 'ALERTA. Nao encontrou docente Matricula: '+mat+' na planilha de dados pessoais!' )
+            else:#if cpf != '':
+                str_dados_docente = str(l)[:-1].replace('__'+str(3)+'__',str(row['CPF']).replace('.','').replace('-',''))                
+                # documento estrangeiro / opcional
+                str_dados_docente = str_dados_docente.replace('__'+str(4)+'__','')                
+                # data nascimento
+                str_dados_docente = str_dados_docente.replace('__'+str(5)+'__',str(row['NASCIMENTO DATA']).replace('/',''))                
+                # cor/raça
+                str_dados_docente = str_dados_docente.replace('__'+str(6)+'__',func.corRaca(str(row['RACA'])))                
+                # nacionalidade
+                str_dados_docente = str_dados_docente.replace('__'+str(7)+'__',func.nacionalidade(str(row['NASCIMENTO MUNICIPIO'])))                
+                # pais de origem
+                str_dados_docente = str_dados_docente.replace('__'+str(8)+'__',func.paisOrigem(str(row['NASCIMENTO MUNICIPIO'])))                
+                # UF de nascimento / opcional
+                str_dados_docente = str_dados_docente.replace('__'+str(9)+'__','')                
+                # municipio de nascimento / opcional
+                str_dados_docente = str_dados_docente.replace('__'+str(10)+'__','')                
 
+                # deficiencia
+                str_dados_docente = str_dados_docente.replace('__'+str(11)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 1
+                str_dados_docente = str_dados_docente.replace('__'+str(12)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 2
+                str_dados_docente = str_dados_docente.replace('__'+str(13)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 3
+                str_dados_docente = str_dados_docente.replace('__'+str(14)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 4
+                str_dados_docente = str_dados_docente.replace('__'+str(15)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 5
+                str_dados_docente = str_dados_docente.replace('__'+str(16)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 6
+                str_dados_docente = str_dados_docente.replace('__'+str(17)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 7
+                str_dados_docente = str_dados_docente.replace('__'+str(18)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 8
+                str_dados_docente = str_dados_docente.replace('__'+str(19)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                # deficiencia item 9
+                str_dados_docente = str_dados_docente.replace('__'+str(20)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+
+                # escolaridade/titulacao
+                str_dados_docente = str_dados_docente.replace('__'+str(21)+'__',func.escolaridade(str(row['TITULACAO'])))                
+
+                # situacao do docente
+                str_dados_docente = str_dados_docente.replace('__'+str(22)+'__',func.situacaoDocente(str(row['SITUACAO'])))                
+                # docente em exercicio 31/12
+                str_dados_docente = str_dados_docente.replace('__'+str(23)+'__',func.docenteEmExercicio31_12(str(row['SITUACAO'])))                
+                # regime de trabalho
+                str_dados_docente = str_dados_docente.replace('__'+str(24)+'__',func.regimeTrabalho(str(row['JORNADA TRABALHO'])))                
+                # docente substituto
+                str_dados_docente = str_dados_docente.replace('__'+str(25)+'__',func.docenteSubstituto(str(row['SITUACAO'])))                
+                # docente visitante
+                str_dados_docente = str_dados_docente.replace('__'+str(26)+'__',func.docenteVisitante(str(row['SITUACAO'])))                
+                # vinculo docente visitante
+                str_dados_docente = str_dados_docente.replace('__'+str(27)+'__',func.vinculoDocenteVisitante(str(row['SITUACAO'])))                
+                # docente curso sequencial
+                str_dados_docente = str_dados_docente.replace('__'+str(28)+'__',func.docenteCursoSequencial(str(row['SITUACAO'])))                
+                # docente graduacao presencial
+                str_dados_docente = str_dados_docente.replace('__'+str(29)+'__',func.docenteCursoPresencial(str(row['SITUACAO'])))                
+                # docente graduacao a distancia
+                str_dados_docente = str_dados_docente.replace('__'+str(30)+'__',func.docenteCursoEaD( mat, df_dados_vinculos ))                
+                # docente strictu presencial
+                str_dados_docente = str_dados_docente.replace('__'+str(31)+'__',func.docenteCursoStrictuPresencial( mat, df_dados_vinculos ))                
+                # docente strictu a distancia
+                str_dados_docente = str_dados_docente.replace('__'+str(32)+'__',func.docenteCursoStrictuEaD( mat, df_dados_vinculos ))                
+
+                # atuacao docente pesquisa
+                str_dados_docente = str_dados_docente.replace('__'+str(33)+'__',func.atuacaoDocentePesquisa( mat ))                
+                # atuacao docente extensao
+                str_dados_docente = str_dados_docente.replace('__'+str(34)+'__',func.atuacaoDocenteExtensao( mat ))                
+
+                # docente em gestao
+                str_dados_docente = str_dados_docente.replace('__'+str(35)+'__',func.docenteGestao(str(row['FUNCAO DISPLAY'])))                
+
+                # bolsa pesquisa
+                str_dados_docente = str_dados_docente.replace('__'+str(36)+'__',func.docenteBolsaPesquisa( mat ))                
+
+                escreveTXT(  str_dados_docente ,DOC_TXT )
+
+
+        elif str(l)[0:3] == '30|' or str(l)[0:3] == '32|':
+            escreveTXT( str(l)[:-1] ,DOC_TXT )
     f.close()
 
-print('### SYNC_SUAP_CENSUP ###')
+print('\n\n### SYNC_SUAP_CENSUP ###')
+inicio = datetime.datetime.now()
 
-df = pd.read_excel('docs/input/docente_vinculos.xls')
-df[['Professores','Diretoria','Período Letivo']].to_csv('docs/output/temp/'+DOC_DOCENTE_VINCULO_CSV,index=False,header=False)
+df_dados_vinculos = pd.read_excel('docs/input/docente_vinculos.xls')
+df_dados_vinculos[['Professores','Diretoria','Período Letivo']].to_csv('docs/output/temp/'+DOC_DOCENTE_VINCULO_CSV,index=False,header=False)
 clearTXT(DOC_TXT)
-df = df.reset_index()
-for index, row in df.iterrows():
+df_dados_vinculos = df_dados_vinculos.reset_index()
+for index, row in df_dados_vinculos.iterrows():
     prof = str(row['Professores']).upper()
     diretoria = str( row['Diretoria'] )
     curso_nome = str( row['Período Letivo'] )
@@ -159,16 +250,5 @@ linhasVinculosCursos(DOC_TXT,DOC_AUX_TXT)
 
 itensLayout()
 
-'''
-df = pd.read_excel('docs/input/docente_dados_pessoais.xls')
-df[['MATRICULA','SERVIDOR','CPF']].to_csv('docs/output/temp/'+DOC_DOCENTE_DADOS_CSV,index=False,header=False)
-#clearTXT(DOC_TXT)
-df = df.reset_index()
-for index, row in df.iterrows():
-    prof = str(row['MATRICULA'])
-    cpf = str(row['CPF']).replace('.','').replace('-','')
-'''
-
-
-
-print('Finalizou processamento.')
+fim = datetime.datetime.now()
+print('\nFim do processamento.\n'+str( int((fim - inicio).total_seconds()) )+' segundos.')
