@@ -3,26 +3,28 @@ import collections
 import datetime
 import functions as func
 
+DIR_DOCS = 'docs/'
 DOC_TXT = 'layout_censup_auto.txt'
 DOC_DOCENTE_VINCULO_CSV = 'test.csv'
 DOC_DOCENTE_DADOS_CSV = 'test1.csv'
 DOC_CURSOS_TXT = 'cursos.txt'
 DOC_AUX_TXT = 'temp/auxiliar.txt'
 DOC_DOCENTE_CURSO_TXT = 'temp/docentes_cursos.txt'
+DOC_CENSUP_ANTERIOR_DOCENTE_CURSO = 'relatorio_docente_curso_censup_anterior.csv'
 
 df_dados_pessoais = ''
 df_dados_vinculos = ''
 
 def clearTXT(doc):
-    with open('docs/output/'+doc,'w') as file:
+    with open(DIR_DOCS+'output/'+doc,'w') as file:
         pass
 
 def escreveTXT(texto,doc):
-    with open('docs/output/'+doc,'a+') as f:
+    with open(DIR_DOCS+'output/'+doc,'a+') as f:
         f.write(texto+'\n')
         
 def searchTXT(text, doc):
-    with open('docs/output/'+doc, 'r', encoding='utf8') as f:
+    with open(DIR_DOCS+'output/'+doc, 'r', encoding='utf8') as f:
         encontrou = ''
         for line in f:
             if str(text) in str(line):
@@ -31,34 +33,34 @@ def searchTXT(text, doc):
         return encontrou
     
 def sortedTXT(file_input,file_output):
-    with open('docs/output/'+file_input, 'r') as r:
+    with open(DIR_DOCS+'output/'+file_input, 'r') as r:
         for line in sorted(r):
-            with open('docs/output/'+file_output,'a+') as f:
+            with open(DIR_DOCS+'output/'+file_output,'a+') as f:
                 f.write(line)
 
 def copyFile(file_input, file_output):
     clearTXT(file_output)
-    with open('docs/output/'+file_input, 'r') as r:
+    with open(DIR_DOCS+'output/'+file_input, 'r') as r:
         for line in r:
-            with open('docs/output/'+file_output,'a+') as f:
+            with open(DIR_DOCS+'output/'+file_output,'a+') as f:
                 f.write( line )
 
 def duplicateLineQTDTXT(file_input, file_output):
     copyFile(file_input,file_output)
     clearTXT(file_input)
 
-    with open('docs/output/'+file_output, 'r') as f:
+    with open(DIR_DOCS+'output/'+file_output, 'r') as f:
         counts = collections.Counter(l.strip() for l in f)
         for line, count in counts.most_common():
-            with open('docs/output/'+file_input,'a+') as f:
+            with open(DIR_DOCS+'output/'+file_input,'a+') as f:
                 f.write( line+'\n' )
     
 def captureMatricula(file_input, file_output):
     clearTXT(file_output)
 
-    with open('docs/output/'+file_input, 'r') as r:
+    with open(DIR_DOCS+'output/'+file_input, 'r') as r:
         for line in r:
-            with open('docs/output/'+file_output,'a+') as f:
+            with open(DIR_DOCS+'output/'+file_output,'a+') as f:
                 profs = line.split('|')[1]
                 cod_curso = line.split('|')[2]
                 mat = profs.split(' (')[1].replace(')','')
@@ -70,9 +72,9 @@ def captureMatricula(file_input, file_output):
 
     clearTXT(DOC_AUX_TXT)
 
-    with open('docs/output/'+file_output, 'r') as r:
+    with open(DIR_DOCS+'output/'+file_output, 'r') as r:
         for line in r:
-            with open('docs/output/'+file_input,'a+') as f:
+            with open(DIR_DOCS+'output/'+file_input,'a+') as f:
                 f.write( line.split('|')[0]+'|'+line.split('|')[1]+'|'+line.split('|')[2]+'|\n' )
 
 
@@ -84,13 +86,13 @@ def captureMatricula(file_input, file_output):
 def linhasVinculosCursos(file_input, file_output):
     clearTXT(DOC_DOCENTE_CURSO_TXT)
 
-    with open('docs/output/'+DOC_DOCENTE_CURSO_TXT,'a+') as f:
+    with open(DIR_DOCS+'output/'+DOC_DOCENTE_CURSO_TXT,'a+') as f:
         f.write( '30|600'+'\n' )
 
-    f1 = open('docs/output/'+file_output, 'r')
+    f1 = open(DIR_DOCS+'output/'+file_output, 'r')
     l1 = f1.readlines()
 
-    f2 = open('docs/output/'+file_input, 'r')
+    f2 = open(DIR_DOCS+'output/'+file_input, 'r')
     l2 = f2.readlines()
     
     for line1 in l1:
@@ -116,14 +118,14 @@ def itensLayout():
     clearTXT(DOC_AUX_TXT)
     copyFile(DOC_TXT, DOC_AUX_TXT)
     clearTXT(DOC_TXT)
-    f = open('docs/output/'+DOC_AUX_TXT,'r')
+    f = open(DIR_DOCS+'output/'+DOC_AUX_TXT,'r')
     ls = f.readlines()
     
     for l in ls:
         if str(l)[0:3] == '31|':
             encontrou_docente_dados_pessoais = ''
             mat = str(l).split('|')[1]
-            df_dados_pessoais = pd.read_excel('docs/input/docente_dados_pessoais_tudo.xls')
+            df_dados_pessoais = pd.read_excel(DIR_DOCS+'input/docente_dados_pessoais.xls')
             df_dados_pessoais[['MATRICULA','SERVIDOR','CPF','NASCIMENTO DATA','DEFICIENCIA','RACA','NASCIMENTO MUNICIPIO','TITULACAO','SITUACAO','JORNADA TRABALHO','FUNCAO DISPLAY']].to_csv('docs/output/temp/'+DOC_DOCENTE_DADOS_CSV,index=False,header=False)
             df_dados_pessoais = df_dados_pessoais.reset_index()
             #cpf = ''
@@ -154,23 +156,23 @@ def itensLayout():
                 # deficiencia
                 str_dados_docente = str_dados_docente.replace('__'+str(11)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 1
-                str_dados_docente = str_dados_docente.replace('__'+str(12)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(12)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 2
-                str_dados_docente = str_dados_docente.replace('__'+str(13)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(13)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 3
-                str_dados_docente = str_dados_docente.replace('__'+str(14)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(14)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 4
-                str_dados_docente = str_dados_docente.replace('__'+str(15)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(15)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 5
-                str_dados_docente = str_dados_docente.replace('__'+str(16)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(16)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 6
-                str_dados_docente = str_dados_docente.replace('__'+str(17)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(17)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 7
-                str_dados_docente = str_dados_docente.replace('__'+str(18)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(18)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 8
-                str_dados_docente = str_dados_docente.replace('__'+str(19)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(19)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
                 # deficiencia item 9
-                str_dados_docente = str_dados_docente.replace('__'+str(20)+'__',func.deficiencia(str(row['DEFICIENCIA'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(20)+'__',func.tipoDeficiencia(str(row['DEFICIENCIA'])))                
 
                 # escolaridade/titulacao
                 str_dados_docente = str_dados_docente.replace('__'+str(21)+'__',func.escolaridade(str(row['TITULACAO'])))                
@@ -190,7 +192,7 @@ def itensLayout():
                 # docente curso sequencial
                 str_dados_docente = str_dados_docente.replace('__'+str(28)+'__',func.docenteCursoSequencial(str(row['SITUACAO'])))                
                 # docente graduacao presencial
-                str_dados_docente = str_dados_docente.replace('__'+str(29)+'__',func.docenteCursoPresencial(str(row['SITUACAO'])))                
+                str_dados_docente = str_dados_docente.replace('__'+str(29)+'__',func.docenteCursoPresencial( mat, df_dados_vinculos ))                
                 # docente graduacao a distancia
                 str_dados_docente = str_dados_docente.replace('__'+str(30)+'__',func.docenteCursoEaD( mat, df_dados_vinculos ))                
                 # docente strictu presencial
@@ -216,11 +218,49 @@ def itensLayout():
             escreveTXT( str(l)[:-1] ,DOC_TXT )
     f.close()
 
+def verifyCensupAnterior():
+    f1 = open(DIR_DOCS+'output/cursos.txt', 'r')
+    l1 = f1.readlines()
+    lista = []
+    #buscar cursos
+    for line1 in l1:
+        curso = str(line1).split('|')[1]
+        df_relatorio_censup_anterior = pd.read_excel(DIR_DOCS+'input/relatorio_docente_curso_censup_anterior.xls')
+        df_relatorio_censup_anterior[['NU_CPF','NOME_DOCENTE','CODIGO_CURSO']].to_csv(DIR_DOCS+'output/temp/'+DOC_CENSUP_ANTERIOR_DOCENTE_CURSO,index=False,header=False)
+        df_relatorio_censup_anterior = df_relatorio_censup_anterior.reset_index()
+        #buscar profs censup anterior
+        for index, row in df_relatorio_censup_anterior.iterrows():
+            cod_curso = str( row['CODIGO_CURSO'] )[:-2]
+            nome_docente = str( row['NOME_DOCENTE'] )
+            cpf_docente = str( row['NU_CPF'] )
+            if str(curso) == str(cod_curso):
+                #print( str(cod_curso)+' '+nome_docente+' '+curso )
+                #buscar profs vinculos atuais
+                f1 = open(DIR_DOCS+'output/layout_censup_auto.txt', 'r')
+                l1 = f1.readlines()
+                not_found = ''
+                cpf = ''
+                for line1 in l1:
+                    if line1.split('|')[0] == '31':
+                        cpf = line1.split('|')[3]
+                        if cpf == cpf_docente:
+                            not_found = cpf
+                            break
+                if not_found == '':
+                    lista.append( nome_docente+' - '+cpf_docente )
+    lista = list(dict.fromkeys(lista))
+    print( str(len(lista))+' profs anteriores sem vinculo atual\n' )
+    for l in lista:
+        print( l )
+
+
+
 print('\n\n### SYNC_SUAP_CENSUP ###')
+print('\n ## Processando. Aguarde...##')
 inicio = datetime.datetime.now()
 
-df_dados_vinculos = pd.read_excel('docs/input/docente_vinculos.xls')
-df_dados_vinculos[['Professores','Diretoria','Período Letivo']].to_csv('docs/output/temp/'+DOC_DOCENTE_VINCULO_CSV,index=False,header=False)
+df_dados_vinculos = pd.read_excel(DIR_DOCS+'input/docente_vinculos.xls')
+df_dados_vinculos[['Professores','Diretoria','Período Letivo']].to_csv(DIR_DOCS+'output/temp/'+DOC_DOCENTE_VINCULO_CSV,index=False,header=False)
 clearTXT(DOC_TXT)
 df_dados_vinculos = df_dados_vinculos.reset_index()
 for index, row in df_dados_vinculos.iterrows():
@@ -249,6 +289,7 @@ captureMatricula(DOC_AUX_TXT,DOC_TXT)
 linhasVinculosCursos(DOC_TXT,DOC_AUX_TXT)
 
 itensLayout()
+verifyCensupAnterior()
 
 fim = datetime.datetime.now()
 print('\nFim do processamento.\n'+str( int((fim - inicio).total_seconds()) )+' segundos.')

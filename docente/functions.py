@@ -1,5 +1,9 @@
 import pandas as pd2
 
+DIR_DOCS = 'docs/'
+DOC_EXTENSAO_CSV = 'test_extensao_em_execucao_e_concluidos.csv'
+DOC_PESQUISA_CSV = 'test_pesquisa_em_execucao_e_concluidos.csv'
+
 def docenteExterno(matricula):
     if len(matricula) >= 11: # matricula == cpf
         return True
@@ -8,6 +12,10 @@ def docenteExterno(matricula):
 def deficiencia(txt):
     if txt == '-':
         return '0'
+
+def tipoDeficiencia(txt):
+    if deficiencia(txt) == '0': return ''
+    else: return ''
 
 def corRaca(txt):
     if str(txt).upper() == 'BRANCA': return '1'
@@ -58,8 +66,15 @@ def vinculoDocenteVisitante(txt):
 def docenteCursoSequencial(txt):
     return '0'
 
-def docenteCursoPresencial(txt):
-    return '1'
+def docenteCursoPresencial(mat, df_vinculos):
+    encontrou = '0'
+    for index, row in df_vinculos.iterrows():
+        curso_nome = str( row['Período Letivo'] )
+        profmat = str( row['Professores'] )
+        if mat in profmat and 'EAD' not in curso_nome.upper():
+            encontrou = '1'
+            break
+    return encontrou
 
 def docenteCursoEaD(mat, df_vinculos):
     encontrou = '0'
@@ -68,6 +83,7 @@ def docenteCursoEaD(mat, df_vinculos):
         profmat = str( row['Professores'] )
         if mat in profmat and 'EAD' in curso_nome.upper():
             encontrou = '1'
+            break
     return encontrou
 
 def docenteCursoStrictuPresencial(mat, df_vinculos):
@@ -79,6 +95,7 @@ def docenteCursoStrictuPresencial(mat, df_vinculos):
         if mat in profmat and diretoria == 'POS' and ('MESTRADO' in curso_nome.upper() or 'DOUTORADO' in curso_nome.upper()):
             #print( ':: '+profmat+' '+curso_nome.upper() )
             encontrou = '1'
+            break
     return encontrou
 
 def docenteCursoStrictuEaD(mat, df_vinculos):
@@ -88,18 +105,48 @@ def docenteCursoStrictuEaD(mat, df_vinculos):
         profmat = str( row['Professores'] )
         diretoria = str( row['Diretoria'] )
         if mat in profmat and diretoria == 'POS' and 'EAD' in curso_nome.upper() and ('MESTRADO' in curso_nome.upper() or 'DOUTORADO' in curso_nome.upper()):
-            print( ':: '+profmat+' '+curso_nome.upper() )
             encontrou = '1'
+            break
     return encontrou
 
-def atuacaoDocentePesquisa(text):
-    return '0'
+def atuacaoDocentePesquisa(mat):
+    df_dados_pesquisa = pd2.read_excel(DIR_DOCS+'input/pesquisa_em_execucao_e_concluidos.xls')
+    df_dados_pesquisa[['Nome','Vínculo']].to_csv(DIR_DOCS+'output/temp/'+DOC_PESQUISA_CSV,index=False,header=False)
+    df_dados_pesquisa = df_dados_pesquisa.reset_index()
+    encontrou = '0'
+    for index, row in df_dados_pesquisa.iterrows():
+        nome = str(row['Nome']).upper()
+        if mat in str(nome):
+            encontrou = '1'
+            break
+    return encontrou
 
-def atuacaoDocenteExtensao(text):
-    return '0'
+def atuacaoDocenteExtensao(mat):
+    df_dados_extensao = pd2.read_excel(DIR_DOCS+'input/extensao_em_execucao_e_concluidos.xls')
+    df_dados_extensao[['Nome','Vínculo','Status']].to_csv(DIR_DOCS+'output/temp/'+DOC_EXTENSAO_CSV,index=False,header=False)
+    df_dados_extensao = df_dados_extensao.reset_index()
+    encontrou = '0'
+    for index, row in df_dados_extensao.iterrows():
+        nome = str(row['Nome']).upper()
+        if mat in str(nome):
+            encontrou = '1'
+            break
+    return encontrou
 
-def docenteBolsaPesquisa(text):
-    return '0'
+def docenteBolsaPesquisa(mat):
+    if atuacaoDocentePesquisa(mat) == '1':
+        df_dados_pesquisa = pd2.read_excel(DIR_DOCS+'input/pesquisa_em_execucao_e_concluidos.xls')
+        df_dados_pesquisa[['Nome','Vínculo']].to_csv(DIR_DOCS+'output/temp/'+DOC_PESQUISA_CSV,index=False,header=False)
+        df_dados_pesquisa = df_dados_pesquisa.reset_index()
+        encontrou = '0'
+        for index, row in df_dados_pesquisa.iterrows():
+            nome = str(row['Nome']).upper()
+            vinculo = str(row['Vínculo']).upper()
+            if mat in str(nome) and 'NÃO BOLSISTA' not in str(vinculo):
+                encontrou = '1'
+                break
+        return encontrou
+    else: return ''
 
 def docenteGestao(txt):
     if 'CD' in str(txt).upper() or 'FG' in str(txt).upper() or 'FUC' in str(txt).upper(): return '1'
